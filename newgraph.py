@@ -1,8 +1,8 @@
 # Lab16_1.py
 # Name: Djibril Ba
+# Date: 5/8/2025
 # This program reads unemployment data from a CSV file,
-# shows the header row, and plots unemployment rates over time.
-# Date: 5/3/2025
+# shows the header row and plots unemployment rates over time
 
 """
 Reads unemployment data from 'OHRU.csv', prints the column headers,
@@ -10,48 +10,73 @@ and displays a line graph of U.S. unemployment rates over time.
 """
 
 import csv
-import matplotlib.pyplot as plt
 from datetime import datetime
+from pathlib import Path
+import matplotlib.pyplot as plt
 
-# Lists to store the data from the CSV file
-dates = []
-rates = []
 
-# Open and read the CSV file
-with open('OHRU.csv', 'r') as file:
-    reader = csv.reader(file)
+def read_unemployment_data(file_path):
+    """Reads dates and unemployment rates from a CSV file."""
+    dates = []
+    rates = []
 
-    for i, row in enumerate(reader):
-        if i == 0:
-            # Print the header row
-            print("Header:", row)
-            continue
+    try:
+        with file_path.open('r', newline='') as file:
+            reader = csv.reader(file)
+            header = next(reader, None)
 
-        # Convert date string to datetime object
-        date = datetime.strptime(row[0], "%Y-%m-%d")
+            if header:
+                print("Header:", header)
 
-        # Convert rate string to float
-        rate = float(row[1])
+    
 
-        # Add the values to our lists
-        dates.append(date)
-        rates.append(rate)
+            for row in reader:
+                try:
+                    date = datetime.strptime(row[0], "%Y-%m-%d")
+                    rate = float(row[1])
+                    dates.append(date)
+                    rates.append(rate)
+                except (ValueError, IndexError) as e:
+                    print(f"Skipping invalid row: {row} - Error: {e}")
 
-# Set the size of the graph
-plt.figure(figsize=(12, 6))
 
-# Plot the data
-plt.plot(dates, rates, label='Unemployment Rate', color='blue')
 
-# Add labels and title
-plt.xlabel('Date')
-plt.ylabel('Unemployment Rate (%)')
-plt.title('U.S. National Unemployment Rate Over Time')
 
-# Add grid and legend
-plt.grid(True)
-plt.legend()
+    except FileNotFoundError:
+        print(f"File not found: {file_path}")
+        return [], []
 
-# Make sure layout fits and show the graph
-plt.tight_layout()
-plt.show()
+    return dates, rates
+
+
+def plot_unemployment(dates, rates):
+    """Plots unemployment rates over time."""
+    plt.figure(figsize=(12, 6))
+    plt.plot(dates, rates, label='Unemployment Rate', color='blue')
+    plt.xlabel('Date')
+    plt.ylabel('Unemployment Rate (%)')
+    plt.title('U.S. National Unemployment Rate Over Time')
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def main():
+    # Set up the path to the CSV file using pathlib for cross platform support
+    file_path = Path("OHRU.csv")
+
+
+
+
+    # Read and plot the data
+    dates, rates = read_unemployment_data(file_path)
+
+    if dates and rates:
+        plot_unemployment(dates, rates)
+    else:
+        print("No valid data to plot.")
+
+
+if __name__ == "__main__":
+    main()
